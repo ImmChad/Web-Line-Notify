@@ -111,15 +111,16 @@ class UserController extends Controller
     }
 
     function viewUser() {
-        $inforUser = Session::get('inforUser');
-        if($inforUser){
+        // $inforUser = Session::get('inforUser');
+        // if($inforUser){
             
             
-            $announceCount = UserController::checkAnnounceCount();
-            return view('Frontend.view-user')->with(["dataUser" => $inforUser])->with(['announceCount' => $announceCount]);
-        }else{
-            return Redirect::to('/');
-        }
+        //     $announceCount = UserController::checkAnnounceCount();
+        //     return view('Frontend.view-user')->with(["dataUser" => $inforUser])->with(['announceCount' => $announceCount]);
+        // }else{
+        //     return Redirect::to('/');
+        // }
+        return view('Frontend.view-user');
     }
 
     function viewAllAnnounceUser() {
