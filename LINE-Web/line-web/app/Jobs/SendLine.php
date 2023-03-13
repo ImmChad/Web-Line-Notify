@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\NotificationController;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,7 +14,7 @@ use LINE\LINEBot;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
 
-class DoSomethingJob implements ShouldQueue
+class SendLine implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,8 +34,8 @@ class DoSomethingJob implements ShouldQueue
     public function handle(): void
     {
 
-        $userLine = AdminController::listUser("connect to line");
-        // $userGmail = AdminController::listUser("connect to gmail");
+        $userLine = NotificationController::listUser("connect to line");
+        // $userGmail = NotificationController::listUser("connect to gmail");
         foreach($userLine as $subUserLine) {
             $param = $this->param;
     

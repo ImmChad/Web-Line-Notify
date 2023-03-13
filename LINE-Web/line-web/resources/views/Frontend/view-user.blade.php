@@ -315,22 +315,29 @@
                                 role="tabpanel" aria-labelledby="v-pills-user-tab">
                                 <div class="profile-mail">
                                     <div class="media">
-                                        <img class="img-100 img-fluid m-r-20 rounded-circle update_img_0"
-                                            src="{{ asset('assets/images/user/2.png') }}" alt="">
+                                    @if (isset($dataUser['pictureUrl']))
+                                    <img class="img-100 img-fluid m-r-20 rounded-circle update_img_0"
+                                            src="{{ $dataUser['pictureUrl'] }}" alt="">
+                                        
+                                    @else
+                                    <img class="img-100 img-fluid m-r-20 rounded-circle update_img_0"
+                                            src="https://store.kidbright.info/upload/cover-image/1544265083-nDP3ez.png" alt="">
+                
+                                    @endif
+                                        
                                         <div class="media-body mt-0">
-                                            <h5><span class="first_name_0">Bucky </span><span
-                                                    class="last_name_0">Barnes</span></h5>
-                                            <p class="email_add_0">barnes@gmail.com</p>
+                                            <h5><span class="first_name_0">{{ $dataUser['displayName'] }}</span></h5>
+                                            <p class="email_add_0">{{ $dataUser['email'] }}</p>
                                             
                                         </div>
                                     </div>
                                     <div class="email-general">
                                         <h6 class="mb-3">General</h6>
                                         <ul>
-                                            <li>Name <span class="font-primary first_name_0">Bucky</span></li>
-                                            <li>Mobile No<span class="font-primary mobile_num_0">+0 1800 76855</span>
+                                            <li>Name <span class="font-primary first_name_0">{{ $dataUser['displayName'] }}</span></li>
+                                            <li>User ID<span class="font-primary mobile_num_0">{{ $dataUser['userId'] }}</span>
                                             </li>
-                                            <li>Email Address <span class="font-primary email_add_0">barnes@gmail.com
+                                            <li>Email Address <span class="font-primary email_add_0">{{ $dataUser['email'] }}
                                                 </span></li>
                                         </ul>
                                     </div>

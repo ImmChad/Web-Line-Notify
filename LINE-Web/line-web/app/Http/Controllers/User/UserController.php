@@ -19,33 +19,50 @@ use Illuminate\Support\Facades\DB;
 use LINE\LINEBot;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
-use GuzzleHttp\Client;
+// use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Redirect;
 use stdClass;
-
+use Illuminate\Support\Str;
+use App\Http\Controllers\Admin\NotificationController;
+use Twilio\Rest\Client;
 class UserController extends Controller
 {
 
     protected $lineService;
-
+    const CHANNEL_LINE = 1;
+    const CHANNEL_EMAIL = 2;
+    const CHANNEL_SMS = 3;
     public function __construct(LineService $lineService)
     {
         $this->lineService = $lineService;
     }
-
     public function index(Request $request) {
         $inforUser = Session::get('inforUser');
         if($inforUser){
             // return Redirect::to('/dashboard');
-            return view('Frontend.view-user')->with(["dataUser" => $inforUser]);
+            $announceCount = UserController::checkAnnounceCount();
+            return view('Frontend.view-user')->with(["dataUser" => $inforUser])->with(['announceCount' => $announceCount]);
         }else{
             $authUrl = $this->lineService->getLoginBaseUrl();
             $authGmail = 'authorized/google';
             return view('Frontend.login-user', compact(['authUrl','authGmail']));
         }
     }
-
+    public function connectSMS(Request $request)
+    {
+        dump($request->number_sms,$request->name_user);
+        $account_sid = getenv("TWILIO_SID");
+        $auth_token = getenv("TWILIO_AUTH_TOKEN");
+        $twilio_number = getenv("TWILIO_NUMBER");
+        $client = new Client($account_sid, $auth_token);
+        $client->validationRequests
+        ->create($request->number_sms, // phoneNumber
+                ["friendlyName" => $request->name_user]
+        );
+    }
     public function handleLineCallback(Request $request) {
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+        date_default_timezone_get();
         $code = $request->input('code', '');
         $response = $this->lineService->getLineToken($code);
         
@@ -68,16 +85,17 @@ class UserController extends Controller
         // return view('Frontend.view-user')->with(["dataUser" => $profile]);
         $request->session()->put('inforUser', $profile);
 
-        $dataUpdate = DB::table('tb_user_info')
-        ->where(['userId' =>  $profile['userId']])
+
+        $dataUpdate = DB::table('notification_user_info')
+        ->where(['user_id' =>  $profile['userId']])
         ->update([
-            'userId' => $profile['userId'],
+            'user_id' => $profile['userId'],
             'displayName' => $profile['displayName'],
             'pictureUrl' => $profile['pictureUrl'],
             'email' => $profile['email']
         ]);
 
-        $count = DB::table('tb_user_info')->where(['userId' =>  $profile['userId']])->get();
+        $count = DB::table('notification_user_info')->where(['user_id' =>  $profile['userId']])->get();
         if(count($count) == 0) {
             if(!isset($profile['pictureUrl'])) {
                 $profile['pictureUrl'] = "";
@@ -87,21 +105,27 @@ class UserController extends Controller
             }
 
             UserController::sendMessForUser($profile['userId'], $profile['displayName']);
+            $uuid = Str::uuid()->toString();
+            $time = date('Y/m/d H:i:s');
+            $result_inserted = DB::table('notification_user_settings')->insertGetId([
+                'id'=>$uuid,
+                'user_id' => $profile['userId'],
+                'notification_channel_id' => UserController::CHANNEL_LINE,
+                'created_at' => $time
+            ]);
+            
 
-            $data = DB::table('tb_user_info')->insertGetId([
-                'userId' => $profile['userId'],
+            $data = DB::table('notification_user_info')->insertGetId([
+                'id'=>$uuid,
+                'user_id' => $profile['userId'],
                 'displayName' => $profile['displayName'],
                 'pictureUrl' => $profile['pictureUrl'],
                 'email' => $profile['email']
             ]);
 
-            date_default_timezone_set('Asia/Ho_Chi_Minh');
-            date_default_timezone_get();
-            $data2 = DB::table('tb_connect_line')->insertGetId([
-                'userId' => $profile['userId'],
-                'status' => "connect to line",
-                'date' => date('Y/m/d H:i:s')
-            ]);
+
+            
+
             
         }
         
@@ -111,16 +135,14 @@ class UserController extends Controller
     }
 
     function viewUser() {
-        // $inforUser = Session::get('inforUser');
-        // if($inforUser){
-            
-            
-        //     $announceCount = UserController::checkAnnounceCount();
-        //     return view('Frontend.view-user')->with(["dataUser" => $inforUser])->with(['announceCount' => $announceCount]);
-        // }else{
-        //     return Redirect::to('/');
-        // }
-        return view('Frontend.view-user');
+        $inforUser = Session::get('inforUser');
+        if($inforUser){
+            $announceCount = UserController::checkAnnounceCount();
+            // dump($inforUser,$announceCount);
+            return view('Frontend.view-user')->with(["dataUser" => $inforUser])->with(['announceCount' => $announceCount]);
+        }else{
+            return Redirect::to('/');
+        }
     }
 
     function viewAllAnnounceUser() {
@@ -130,7 +152,7 @@ class UserController extends Controller
 
 
             $dataList = UserController::getAnnounceContent();
-
+            dump($dataList);
             return view('Frontend.view-announce-user')->with(["dataList" => $dataList]);
         }else{
             return Redirect::to('/');
@@ -171,7 +193,7 @@ class UserController extends Controller
 
             $countUpdate = DB::table('tb_announce_read')
             ->where(['notification_id' => $request->id])
-            ->where(['userId' => $inforUser['userId']])
+            ->where(['user_id' => $inforUser['userId']])
             ->get();
             if(count($countUpdate) == 0) {
                 date_default_timezone_set('Asia/Ho_Chi_Minh');
@@ -183,10 +205,12 @@ class UserController extends Controller
                     'read_at' => date('Y/m/d H:i:s')
                 ]);
             }
+            
 
 
-            $data = DB::table('tb_announce')
+            $notifications = DB::table('notification')
             ->where(['id' => $request->id])
+
             ->get(
                 array(
                     'id',
@@ -195,8 +219,14 @@ class UserController extends Controller
                     'created_at'
                     )
             );
-
-            return $data;
+            foreach($notifications as $key=>$notification)
+            {
+                $type_notification = DB::table('notification_type')
+                ->where('id',$notification->type)->first();
+                if($type_notification);
+                $notifications[$key]->name_type = $type_notification->type;
+            }
+            return $notifications;
         }else{
             return Redirect::to('/');
         }
@@ -219,32 +249,89 @@ class UserController extends Controller
     function getAnnounceContent() {
         $inforUser = Session::get('inforUser');
         if($inforUser){
+            $dataUser = DB::table('notification_user_settings')
+            ->where('user_id', $inforUser['userId'])
+            ->first();
 
-            $dateStart = DB::table('tb_connect_line')->where(['userId' => $inforUser['userId']])->get();
-
-            $data = DB::table('tb_announce')
-            ->where('created_at', '>=', $dateStart[0]->date)
-            ->orderByDesc('id')
-            ->get(
-                array(
-                    'id',
-                    'announce_title',
-                    'announce_content',
-                    'created_at'
-                    )
-            );
-
-            $newData = new stdClass();
-            $ListData = [];
-            foreach($data as $subData) {
-                $dataAnnounce = DB::table('tb_announce_read')
-                ->where(['notification_id' => $subData->id])
-                ->where(['userId' => $inforUser['userId']])
+            $dateStart = DB::table('notification_user_settings')->where(['user_id' => $inforUser['userId']])->get();
+            $data=[];
+            if($dataUser->notification_channel_id==UserController::CHANNEL_EMAIL)
+            {
+                $data = DB::table('notification')
+                ->where('created_at', '>=', $dateStart[0]->created_at)
+                ->where('is_sent','!=',null)
+                ->where('is_sent','!=',false)
+                ->where('type','!=', NotificationController::NOTIFICATION_NEW_REGISTER)
+                ->orderByDesc('id')
                 ->get(
                     array(
-                        'read_at'
+                        'id',
+                        'type',
+                        'announce_title',
+                        'announce_content',
+                        'created_at'
                         )
                 );
+            }
+            else
+            {
+                $data = DB::table('notification')
+                ->where('created_at', '>=', $dateStart[0]->created_at)
+                ->where('is_sent','!=',null)
+                ->where('is_sent','!=',false)
+                ->where('type','!=', NotificationController::NOTIFICATION_EMAIL_MAGAZINE)
+                ->where('type','!=', NotificationController::NOTIFICATION_NEW_REGISTER)
+                ->orderByDesc('id')
+                ->get(
+                    array(
+                        'id',
+                        'type',
+                        'announce_title',
+                        'announce_content',
+                        'created_at'
+                        )
+                );
+            }
+            
+            foreach($data as $key=>$notification)
+            {
+                $type_notification = DB::table('notification_type')
+                ->where('id',$notification->type)->first();
+                if($type_notification);
+                $data[$key]->name_type = $type_notification->type;
+            }
+            
+            $newData = new stdClass();
+            $ListData = [];
+            
+            foreach($data as $subData) {
+                $dataAnnounce=[];
+                if($dataUser->notification_channel_id==UserController::CHANNEL_EMAIL)
+                {
+                    if($subData->id)
+                    $dataAnnounce = DB::table('notification_read')
+                    ->where(['notification_id' => $subData->id])
+                    ->where(['user_id' => $dataUser->id])
+                    ->get(
+                        array(
+                            'read_at'
+                            )
+                    );
+                }
+                else
+                {
+                    if($subData->id && $subData->type != NotificationController::NOTIFICATION_EMAIL_MAGAZINE)
+                    $dataAnnounce = DB::table('notification_read')
+                    ->where(['notification_id' => $subData->id])
+                    ->where(['user_id' => $dataUser->id])
+                    ->where(['user_id' => $dataUser->id])
+                    ->get(
+                        array(
+                            'read_at'
+                            )
+                    ); 
+                }
+
                 if(count($dataAnnounce) > 0) {
                     $subData->read_at = $dataAnnounce[0]->read_at;
                 } else {
@@ -259,5 +346,61 @@ class UserController extends Controller
             return Redirect::to('/');
         }
         
+    }
+    function detailNotification(Request $request,$id)
+    {
+        $inforUser = Session::get('inforUser');
+        if($inforUser){
+            $dataUser = DB::table('notification_user_settings')
+            ->where('user_id',$inforUser['userId'])
+            ->first();
+            $notification = null;
+            if($dataUser->notification_channel_id==UserController::CHANNEL_EMAIL)
+            {
+                $notification = DB::table('notification')
+                ->where(['id' => $id])
+                ->first();
+            }
+            else
+            {
+                $notification = DB::table('notification')
+                ->where(['id' => $id])
+                ->where('type','!=',NotificationController::NOTIFICATION_EMAIL_MAGAZINE)
+                ->first();
+            }
+            if($notification)
+            {
+                if($dataUser)
+                {
+                    $count = DB::table('notification_read')
+                    ->where(['notification_id'=>$notification->id,
+                              'user_id'=>$dataUser->id,
+                    ])->get();
+                    if(count($count)==0)
+                    {
+                        $insert = DB::table('notification_read')
+                        ->insert(['notification_id'=>$notification->id,
+                                  'user_id'=>$dataUser->id,
+                                  'read_at'=>now()
+                    ]);
+                    }
+                }
+                $type_notification = DB::table('notification_type')
+                ->where('id',$notification->type)->first();
+                if($type_notification);
+                $notification->name_type = $type_notification->type;
+                // dump($notification);
+                return view("Frontend.view-announce-user-detail")->with(['notification'=>$notification]);
+            }
+            else
+            {
+                return Redirect::to('/');
+            }
+            
+        }
+        else{
+            return Redirect::to('/');
+        }
+
     }
 }

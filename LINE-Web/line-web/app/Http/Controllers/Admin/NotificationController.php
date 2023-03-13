@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\DoSomethingJob;
-use App\Jobs\SendGmail;
+use App\Jobs\SendMail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,26 +18,82 @@ use App\Mail\NotificationMail;
 use App\Notifications\NotificationMessage;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redirect;
+use App\Http\Controllers\User\UserController;
 
 
 // use Illuminate\Notifications\Notification;
 
 class NotificationController extends Controller
 {
-    function NavigationView() {
+    const NOTIFICATION_NEW_REGISTER = 1;
+    const NOTIFICATION_FROM_ADMIN = 2;
+    const NOTIFICATION_EMAIL_MAGAZINE = 3;
+    function loginAdmin()
+    {
+        $data_admin = Session::get('data_admin');
+        if($data_admin)
+        {
+            return NotificationController::NavigationView();
+        }
+        else
+        {
+            return view('Backend.login-admin');
+        }
         
+    }
+    function handleSubmitLogin(Request $request)
+    {
 
-        return Redirect::to('/admin/resigter-line-list');
+        if(true)
+        {
+            $password = $request->password;
+            $username = $request->username;
+            $dataAdmin = DB::table('admin')
+            ->where(['password'=>$password,
+                     'username'=>$username])
+            ->get();
+            if(count($dataAdmin)==1)
+            {
+                $request->session()->put('data_admin',$dataAdmin);
+                return NotificationController::NavigationView();
+            }
+            else
+            {
+                return view('Backend.login-admin');
+            }
+        }
+        else
+        {
+            return view('Backend.login-admin');
+        }
+
+        
+    }
+    function NavigationView() {
+        $dataList = NotificationController::listConnectLine();
+        dump($dataList);
+
+        return Redirect::to('/admin/register-line-list');
     }
 
     function RegisterLineList() {
-        // $dataList = NotificationController::listAnnounce();
-        // return view('Backend.register-line-list')->with(['dataList' => $dataList]);
-        return view('Backend.register-line-list');
+        $dataList = NotificationController::listConnectLine();
+        // dump($dataList);
+        return view('Backend.register-line-list')->with(["dataList" => $dataList]);;
     }
 
     function NotificationList() {
-        return view('Backend.notification-list');
+        $data_admin = Session::get('data_admin');
+        if($data_admin)
+        {
+            $dataList = NotificationController::listAnnounce();
+            dump($dataList);
+            return view('Backend.notification-list')->with(['dataList' => $dataList]);
+        }
+        else
+        {
+            return Redirect::to('/admin');
+        }
     }
 
     function SendNotificationView($notification_type) {
@@ -62,93 +118,46 @@ class NotificationController extends Controller
     function index() {
 
         $dataList = NotificationController::listConnectLine();
-        // dd($dataList);
+        dump($dataList);
 
-        return view('Backend.view-admin')->with(["dataList" => $dataList]);
+        return NotificationController::RegisterLineList()->with(["dataList" => $dataList]);
     }
 
     
 
     function sendMessForListUser(Request $request) {
 
-        $userIds = NotificationController::listConnectAll();
-
-        // $user = User::find($id);
-        // $user->notify(new MyMultiChannelNotification($message, $user->line_id));
-
-    
-
+        $userIds = NotificationController::listConnectAll();    
+        // dd($request->message,$request->title,$request->delayTime);
         $param = $request->message;
-        // $userId = $subUserId->userId;
-        // $emailTo = $subUserId->email;
-
-
-        DoSomethingJob::dispatch($param)->delay(now()->addSeconds(intval($request->delayTime)));
-        SendGmail::dispatch($request->message)->delay(now()->addSeconds(intval($request->delayTime)));
-        $this->SMS_sendNotification($request);
-
-
-
-        // dump($userGmail);
-        // dd($userLine);
-
-
-
-
-        // foreach($userIds as $subUserId) {
-        //     $status = DB::table('tb_connect_line')->where(['userId' =>  $subUserId->userId])->get()[0]->status;
-        //     if($status == "connect to line") {
-        //         $param = $request->message;
-        //         $userId = $subUserId->userId;
-        //         $doJob = DoSomethingJob::dispatch($param, $userId)->delay(now()->addSeconds(intval($request->delayTime)));
-                
-        //     } 
-        //     else if($status == "connect to gmail")
-        //     {
-        //         $emailTo = $subUserId->email;
-
-        //         SendGmail::dispatch($emailTo, $request->message)->delay(now()->addSeconds(intval($request->delayTime)));
-
-        //         $this->SMS_sendNotification($request);
-        //         // Mail::to($request->email)->send(new NotificationMail($mailData));
-        //     }
-        // }
-
+        if(intval($request->type_notification )=== NotificationController::NOTIFICATION_EMAIL_MAGAZINE)
+        {
+            // dd($request->type_notification,$request->scheduled_at);
+            SendMail::dispatch($request->message,$request->title)->delay(now()->addSeconds(intval($request->delayTime)));
+        }
+        else if (intval($request->type_notification )=== NotificationController::NOTIFICATION_FROM_ADMIN)
+        {
+            // dd($request->type_notification,$request->scheduled_at);
+            // SendLine::dispatch($param)->delay(now()->addSeconds(intval($request->delayTime)));
+            // SendMail::dispatch($request->message,$request->title)->delay(now()->addSeconds(intval($request->delayTime)));
+            // SendSMS::dispatch($request->message,$request->title)->delay(now()->addSeconds(intval($request->delayTime))); 
+        }
+               
         date_default_timezone_set('Asia/Ho_Chi_Minh');
         date_default_timezone_get();
-        $data2 = DB::table('tb_announce')->insertGetId([
+        $is_scheduled = $request->delayTime>0;
+        $is_sent = false;
+
+        $data2 = DB::table('notification')->insertGetId([
+            'type'=>$request->type_notification,
             'announce_title' => $request->title,
             'announce_content' => $request->message,
+            'is_sent'=>true,
+            'is_scheduled'=>$is_scheduled,
             'created_at' => date('Y/m/d H:i:s')
         ]);
-
-
-
-
-
         $userIds = $request->delayTime;
         return $userIds;
-    }
-
-
-    function SMS_sendNotification(Request $request)
-    {
-        $account_sid = getenv("TWILIO_SID");
-        $auth_token = getenv("TWILIO_AUTH_TOKEN");
-        $twilio_number = getenv("TWILIO_NUMBER");
-
-        $client = new Client($account_sid, $auth_token);
-        // Teacher number
-        $client->messages->create("+84 91 664 91 09", ['from' => $twilio_number, 'body' => $request->message]);
-        // Dung number
-        // $client->messages->create("+84 339 601 517", ['from' => $twilio_number, 'body' => $request->message]);
-
-        // $validation_request = 
-        //     $client->validationRequests
-        //         ->create("+84354723814", // phoneNumber
-        //                 ["friendlyName" => "VKU TUNG TRUONG"]
-        //         );
-        // dump($validation_request);
     }
 
     function getAnnounceContent(Request $request) {
@@ -168,22 +177,22 @@ class NotificationController extends Controller
     }
 
     public static function listConnectLine() {
-        $data = DB::table('tb_connect_line')
-        ->where(['status' => "connect to line"])
+        $data = DB::table('notification_user_settings')
+        ->where(['notification_channel_id' =>UserController::CHANNEL_LINE])
         ->get(
             array(
                 'id',
-                'userId',
-                'status',
-                'date'
+                'user_id',
+                'notification_channel_id',
+                'created_at'
                 )
         );
 
         $newListData = new stdClass();
         $List = [];
         foreach($data as $subData) {
-            $displayName = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->displayName;
-            $email = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->email;
+            $displayName = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->displayName;
+            $email = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->email;
 
             $subData->displayName = $displayName;
             $subData->email = $email;
@@ -197,21 +206,21 @@ class NotificationController extends Controller
     }
 
     public static function listConnectAll() {
-        $data = DB::table('tb_connect_line')
+        $data = DB::table('notification_user_settings')
         ->get(
             array(
                 'id',
-                'userId',
-                'status',
-                'date'
+                'user_id',
+                'notification_channel_id',
+                'created_at'
                 )
         );
 
         $newListData = new stdClass();
         $List = [];
         foreach($data as $subData) {
-            $displayName = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->displayName;
-            $email = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->email;
+            $displayName = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->displayName;
+            $email = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->email;
 
             $subData->displayName = $displayName;
             $subData->email = $email;
@@ -225,37 +234,38 @@ class NotificationController extends Controller
     }
 
     function listAnnounce() {
-        $data = DB::table('tb_announce')
+        $notifications = DB::table('notification')
         ->orderByDesc('id')
         ->get(
-            array(
-                'id',
-                'announce_title',
-                'announce_content',
-                'created_at'
-                )
         );
+        foreach($notifications as $key=>$notification)
+        {
+            $type_notification = DB::table('notification_type')
+            ->where('id',$notification->type)->first();
+            if($type_notification);
+            $notifications[$key]->name_type = $type_notification->type;
+        }
 
-        return $data;
+        return $notifications;
     }
 
     public static function listUser($status) {
-        $data = DB::table('tb_connect_line')
-        ->where(['status' => $status])
+        $data = DB::table('notification_user_settings')
+        ->where(['notification_channel_id' => $status])
         ->get(
             array(
                 'id',
-                'userId',
-                'status',
-                'date'
+                'user_id',
+                'notification_channel_id',
+                'created_at'
                 )
         );
 
         $newListData = new stdClass();
         $List = [];
         foreach($data as $subData) {
-            $displayName = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->displayName;
-            $email = DB::table('tb_user_info')->where(['userId' =>  $subData->userId])->get()[0]->email;
+            $displayName = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->displayName;
+            $email = DB::table('notification_user_info')->where(['user_id' =>  $subData->user_id])->get()[0]->email;
 
             $subData->displayName = $displayName;
             $subData->email = $email;
@@ -266,5 +276,30 @@ class NotificationController extends Controller
 
 
         return $newListData;
+    }
+    function detailNotification(Request $request,$id)
+    {
+        $dataAdmin = Session::get('data_admin');
+        if($dataAdmin){
+            $notification = null;
+                $notification = DB::table('notification')
+                ->where(['id' => $id])
+                ->first();
+                $type_notification = DB::table('notification_type')
+                ->where('id',$notification->type)->first();
+                if($type_notification);
+                $notification->name_type = $type_notification->type;
+                // dump($notification);
+                return view("Backend.view-announce-admin-detail")->with(['notification'=>$notification]);
+        }
+        else{
+            return Redirect::to('/');
+        }
+
+    }
+    public function reqLogout()
+    {
+        Session::forget('data_admin');
+        return Redirect::to('/admin');
     }
 }

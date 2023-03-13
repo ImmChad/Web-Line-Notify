@@ -1,6 +1,11 @@
 @extends('Backend.backend-view')
 @section('ContentAdmin')
-
+    <style>
+        .link-detail-announce
+        {
+            cursor: pointer;
+        }
+    </style>
     {{-- <div class="title-manager">
     <h1 class="text-title-manager" >Table Register Notification Line</h1>
     </div> --}}
@@ -35,135 +40,21 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">First Name</th>
-                            <th scope="col">Last Name</th>
-                            <th scope="col">Username</th>
-                            <th scope="col">Role</th>
-                            <th scope="col">Country</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Title ID</th>
+                            <th scope="col">Time Notification</th>
+
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
+                    @foreach ($dataList as $subDataList )
+                        <tr class="link-detail-announce" data-id-notification='{{$subDataList->id}}'>
+                            <td >{{$subDataList->name_type}}</td>
+                            <td>{{$subDataList->announce_title}}</td>
+                            <td>{{$subDataList->created_at}}</td>
                         </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
+                    @endforeach 
+
                     </tbody>
                 </table>
             </div>
@@ -172,6 +63,12 @@
     
 
     <script>
+        var tr_announces = document.querySelectorAll('.link-detail-announce');
+        tr_announces.forEach(tr_announce=>{
+            tr_announce.addEventListener('click',event=>{
+                location.href =`/admin/notification/${event.currentTarget.getAttribute('data-id-notification')}/detail`
+            })
+        })
         let btnNewNotification = document.querySelector('.btn-new-notification');
         btnNewNotification.addEventListener('click', (e)=> {
             $('.parent-form-popup').css("display", "flex");

@@ -1,6 +1,11 @@
 @extends('Backend.backend-view')
 @section('ContentAdmin')
-
+    <style>
+        .widget-joins:after
+        {
+            height: 0px;
+        }
+    </style>
     {{-- <div class="title-manager">
     <h1 class="text-title-manager" >Table Register Notification Line</h1>
     </div> --}}
@@ -12,7 +17,7 @@
                     <h5>Notification</h5>
                     <div class="card-header-right">
                         <ul class="list-unstyled card-option">
-                            <li><i class="return-notification-list" data-feather="corner-down-left" style="cursor: pointer;"></i></li>
+                        <li class="return-notification-list"><i data-feather="corner-down-left" style="cursor: pointer;"></i></li>                            
                         </ul>
                     </div>
                 </div>
@@ -117,49 +122,47 @@
             if(diffInSeconds < 0) {
                 displayToast("Cann't enter this date in the past to set the timer!")
             } else {
-                if(announce_title.trim() != "" || announce_content.trim() != "") {
+                if(announce_title.trim() != "" && announce_content.trim() != "") {
                     // console.log(created_at + " " + announce_title + " " + announce_content);
 
-                    console.log(notification_type);
-                    console.log(announce_title);
-                    console.log(announce_content);
-                    console.log(created_at);
-                    console.log(diffInSeconds);
+                    // console.log(notification_type);
+                    // console.log(announce_title);
+                    // console.log(announce_content);
+                    // console.log(created_at);
+                    // console.log(diffInSeconds);
 
 
 
-                    // var form  = new FormData();
-                    // form.append('message', announce_content);
-                    // form.append('title', announce_title);
-                    // form.append('delayTime', diffInSeconds);
-                    // form.append('created_at', created_at);
-                    // form.append('type', notification_type);
+                    var form  = new FormData();
+                    form.append('message', announce_content);
+                    form.append('title', announce_title);
+                    form.append('delayTime', diffInSeconds);
+                    form.append('scheduled_at', created_at);
+                    form.append('type_notification', notification_type);
 
-
-
-                    // $.ajaxSetup({
-                    //     headers: {
-                    //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    //     }
-                    // });
-                    // $.ajax({
-                    //     url: '{{URL::to("/admin/send-mess")}}',
-                    //     method: 'post',
-                    //     data: form,
-                    //     contentType: false,
-                    //     processData: false,
-                    //     dataType: 'json',
-                    //     success: function(data) {
-                    //         console.log(data);
-                    //         displayToast('Send Success!');
-                    //         $('#created_at').val("");
-                    //         $('#announce_content').val("");
-                    //         $('#announce_title').val("");
-                    //     },
-                    //     error: function() {
-                    //         displayToast('Can not add data!');
-                    //     }
-                    // });
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    });
+                    $.ajax({
+                        url: '{{URL::to("/admin/send-mess")}}',
+                        method: 'post',
+                        data: form,
+                        contentType: false,
+                        processData: false,
+                        dataType: 'json',
+                        success: function(data) {
+                            console.log(data);
+                            displayToast('Send Success!');
+                            $('#created_at').val("");
+                            $('#announce_content').val("");
+                            $('#announce_title').val("");
+                        },
+                        error: function() {
+                            displayToast('Can not add data!');
+                        }
+                    });
                 } else {
                     displayToast("Please, Enter full!");
                 }

@@ -181,52 +181,32 @@
                     <div class="card scroll-card" style=" height: calc(100vh - 2rem); overflow-y: scroll;">
                         <div class="card-body">
                             <div style="display: flex;justify-content: space-between">
-                                <div class="card-title col-sm-9" style="font-size: 25px; font-weight: 600; padding-left: 0px;">ANNOUNCE</div>
+                                <div class="card-title col-sm-12" style="font-size: 20px; font-weight: 700; padding-left: 0px; border: 2px solid black; border-radius: 0.2rem;">
+                                    <span class="announce_title" style="margin: 0rem 1rem;">
+                                    {{$notification->name_type}}
+                                    </span>
+                                </div>
                             </div>
                             <nav aria-label="breadcrumb" style="border-radius: 0px">
-                                <ul class="breadcrumb" style="border-radius: 0px; margin-bottom: 0px;">
+                                <ul class="breadcrumb" style="border-radius: 0px; margin-bottom: 0px; background: none;">
                                     <li class="breadcrumb-item active" aria-current="page">
-                                        <span>List Announce</span>
+                                        <span class="created_at"><?php
+                                            $today = date('d/m/Y');
+                                            echo $today;
+                                            ?></span>
                                     </li>
                                 </ul>
                             </nav>
-                            <table style="background: white;" class="table table-striped">
-                                <tbody>
-                                    @foreach ($dataList as $subDataList)
-
-                                        <tr class="row_data_news" style="background: white; border-bottom: 1px solid #f0f1f6;">
-                                            @if($subDataList->read_at == "null")
-                                                <td style="vertical-align: middle; font-weight: 700;">
-                                                    {{ $subDataList->created_at }}
-                                                </td>
-                                                <td class="announce_name_row" style="vertical-align: middle; font-weight: 700;">
-                                                    <a href="/notification/{{$subDataList->id}}/detail" style="color: black;text-decoration: none;">{{ $subDataList->announce_title }}</a>
-                                                </td>
-                                                <td style="vertical-align: middle; font-weight: 700;">
-                                                    {{ $subDataList->name_type }}
-                                                </td>
-                                            @else
-                                                <td class="announce_name_row" style="vertical-align: middle;">
-                                                {{ $subDataList->created_at }}
-                                                </td>
-                                                <td class="announce_name_row" style="vertical-align: middle;">
-                                                <a href="/notification/{{$subDataList->id}}/detail" style="color: black;text-decoration: none;">{{ $subDataList->announce_title }}</a>
-                                                </td>
-                                                <td class="announce_name_row" style="vertical-align: middle;">
-                                                {{ $subDataList->name_type }}
-                                                </td>
-                                                
-                                            @endif
-  
-
-            
-
-                                        </tr>
-                                    @endforeach
-                                    
-                                </tbody>
-            
-                            </table>
+                            <div class="card-title col-sm-12" style="font-size: 20px; font-weight: 700; padding-left: 0px; border: 2px solid black; border-radius: 0.2rem;">
+                                    <span class="announce_title" style="margin: 0rem 1rem;">
+                                    {{$notification->announce_title}}
+                                    </span>
+                                </div>
+                            <div class="card-title col-sm-12 scroll-card" style="font-size: 20px; font-weight: 700; border: 2px solid black; border-radius: 0.2rem; height: 550px; overflow-y: scroll;">
+                                <span class="announce_content" style="padding: 1rem;">
+                                {!! $notification->announce_content !!}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

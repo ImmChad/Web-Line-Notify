@@ -15,183 +15,27 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">First Name</th>
-                            <th scope="col">Last Name</th>
                             <th scope="col">Username</th>
-                            <th scope="col">Role</th>
-                            <th scope="col">Country</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Time Connected</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
+                    @foreach ($dataList as $subDataList )
+                        <tr data-id-register='{{$subDataList->id}}'>
+                            <td>{{ $subDataList->displayName }}</td>
+                            <td>{{ $subDataList->email }}</td>
+                            <td>{{ $subDataList->created_at }}</td>
                         </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Alexander</td>
-                            <td>Orton</td>
-                            <td>@mdorton</td>
-                            <td>Admin</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">2</th>
-                            <td>John Deo</td>
-                            <td>Deo</td>
-                            <td>@johndeo</td>
-                            <td>User</td>
-                            <td>USA</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">3</th>
-                            <td>Randy Orton</td>
-                            <td>the Bird</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>UK</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">4</th>
-                            <td>Randy Mark</td>
-                            <td>Ottandy</td>
-                            <td>@mdothe</td>
-                            <td>user</td>
-                            <td>AUS</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">5</th>
-                            <td>Ram Jacob</td>
-                            <td>Thornton</td>
-                            <td>@twitter</td>
-                            <td>admin</td>
-                            <td>IND</td>
-                        </tr>
+                    @endforeach 
+
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-    {{-- <div class="container-table-register">
-        <table class="table table-striped table-register">
-            <thead>
-                <tr>
-                    <th scope="col">User name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">State</th>
-                    <th scope="col">Time Connected</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Tung Truong</td>
-                    <td>tung@gmail.com</td>
-                    <td>Line</td>
-                    <td>23/06/2023</td>
-                </tr>
-            </tbody>
-        </table>
-    </div> --}}
-    {{-- @foreach ($dataList as $subDataList )
-    <tr>
-        <td>{{ $subDataList->displayName }}</td>
-        <td>{{ $subDataList->email }}</td>
-        <td>{{ $subDataList->status }}</td>
-        <td>{{ $subDataList->date }}</td>
-    </tr>
-    @endforeach --}}
-
 @endsection
 
-
-
-    {{-- <div class="container-form-send-notify">
-        <form  id="form-send-notify">
-            <div class="mb-3">
-                <label for="exampleInputEmail1" class="form-label">Content Notify</label>
-                <textarea type="texr" class="form-control" class="ipt_notify" id="ipt_text_notify"></textarea>
-            </div>
-            <button id="submit-btn" type="submit" class="btn btn-primary btn-submit-notify">Submit</button>
-            <button class="btn btn-primary btn-select-all-notify">Select All</button>
-        </form>
-    </div> --}}
 
 
     {{-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

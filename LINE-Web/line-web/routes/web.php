@@ -27,7 +27,9 @@ Route::get('/user', [UserController::class, 'viewUser']);
 Route::get('/logout-user', [UserController::class, 'logoutUser']);
 
 Route::get('/user/notify/list', [UserController::class, 'viewAllAnnounceUser']);
+Route::get('/notification/{id}/detail', [UserController::class, 'detailNotification']);
 Route::post('/user/get-announce-content', [UserController::class, 'getAnnounceContentRead']);
+Route::post('/user/connect-SMS', [UserController::class, 'connectSMS']);
 
 
 // Login Line
@@ -42,14 +44,18 @@ Route::get('authorized/google/callback', [ConnectGmailController::class, 'handle
 
 
  // admin 
-Route::group(array('prefix' => '/admin'), function() {
-    Route::get('/', [NotificationController::class, 'NavigationView']);
+Route::get('/admin', [NotificationController::class, 'loginAdmin']);
+Route::post('/admin/login', [NotificationController::class, 'handleSubmitLogin']);
+Route::group(array('prefix' => '/admin','middleware'=>'checkAdminLogin'), function() {
+    // Route::get('/', [NotificationController::class, 'NavigationView']);
     // Route::get('/line-user-view', [AdminController::class, 'index']);
     // Route::get('/announce-view', [AdminController::class, 'announceView']);
     // Route::get('/send-message-view', [AdminController::class, 'sendMessView']);
+    Route::get('/notification/{id}/detail', [NotificationController::class, 'detailNotification']);
 
-    Route::post('/send-mess', [AdminController::class, 'sendMessForListUser']);
-    Route::post('/get-announce-content', [AdminController::class, 'getAnnounceContent']);
+    Route::post('/send-mess', [NotificationController::class, 'sendMessForListUser']);
+    // Route::post('/get-announce-content', [AdminController::class, 'getAnnounceContent']);
+    Route::get('/log-out', [NotificationController::class, 'reqLogout']);
 
     Route::get('/register-line-list', [NotificationController::class, 'RegisterLineList'])->name('register-line-list');
     Route::get('/notification-list', [NotificationController::class, 'NotificationList'])->name('notification-list');
